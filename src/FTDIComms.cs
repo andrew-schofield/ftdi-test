@@ -11,16 +11,17 @@ namespace FTDI_Test
     using System.Linq;
     using System.Threading;
     using FTD2XX_NET;
-    
+
     /// <summary>
     /// TODO: Update summary.
     /// </summary>
     public class FTDIComms
     {
-        private UInt32 ftdiDeviceCount = 0;
-        private FTDI.FT_STATUS ftStatus = FTDI.FT_STATUS.FT_OK;
+        private readonly UInt32 ftdiDeviceCount;
 
-        private FTDI myFtdiDevice;
+        private readonly FTDI myFtdiDevice;
+
+        private FTDI.FT_STATUS ftStatus = FTDI.FT_STATUS.FT_OK;
 
         public int DeviceCount
         {
@@ -30,7 +31,7 @@ namespace FTDI_Test
         public FTDIComms()
         {
             // Create new instance of the FTDI device class
-            FTDI myFtdiDevice = new FTDI();
+            myFtdiDevice = new FTDI();
 
             // Determine the number of FTDI devices connected to the machine
             ftStatus = myFtdiDevice.GetNumberOfDevices(ref ftdiDeviceCount);
@@ -38,22 +39,19 @@ namespace FTDI_Test
             // Check status
             if (ftStatus == FTDI.FT_STATUS.FT_OK)
             {
-                Console.WriteLine("Number of FTDI devices: " + ftdiDeviceCount.ToString());
+                Console.WriteLine("Number of FTDI devices: " + this.ftdiDeviceCount);
                 Console.WriteLine("");
             }
             else
             {
-                // Wait for a key press
-                Console.WriteLine("Failed to get number of devices (error " + ftStatus.ToString() + ")");
+                Console.WriteLine("Failed to get number of devices (error " + this.ftStatus + ")");
                 return;
             }
 
             // If no devices available, return
             if (ftdiDeviceCount == 0)
             {
-                // Wait for a key press
-                Console.WriteLine("Failed to get number of devices (error " + ftStatus.ToString() + ")");
-                return;
+                Console.WriteLine("Failed to get number of devices (error " + this.ftStatus + ")");
             }
         }
 
@@ -69,68 +67,74 @@ namespace FTDI_Test
             {
                 for (UInt32 i = 0; i < ftdiDeviceCount; i++)
                 {
-                    Console.WriteLine("Device Index: " + i.ToString());
+                    Console.WriteLine("Device Index: " + i);
                     Console.WriteLine("Flags: " + String.Format("{0:x}", ftdiDeviceList[i].Flags));
-                    Console.WriteLine("Type: " + ftdiDeviceList[i].Type.ToString());
+                    Console.WriteLine("Type: " + ftdiDeviceList[i].Type);
                     Console.WriteLine("ID: " + String.Format("{0:x}", ftdiDeviceList[i].ID));
                     Console.WriteLine("Location ID: " + String.Format("{0:x}", ftdiDeviceList[i].LocId));
-                    Console.WriteLine("Serial Number: " + ftdiDeviceList[i].SerialNumber.ToString());
-                    Console.WriteLine("Description: " + ftdiDeviceList[i].Description.ToString());
+                    Console.WriteLine("Serial Number: " + ftdiDeviceList[i].SerialNumber);
+                    Console.WriteLine("Description: " + ftdiDeviceList[i].Description);
                     Console.WriteLine("");
                 }
             }
             return ftdiDeviceList.ToList();
         }
 
-        public void OpenDevice(string serialNumber)
+        public void OpenDeviceBySerialNumber(string serialNumber)
         {
             // Open first device in our list by serial number
             ftStatus = myFtdiDevice.OpenBySerialNumber(serialNumber);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
-                // Wait for a key press
-                Console.WriteLine("Failed to open device (error " + ftStatus.ToString() + ")");
-                return;
+                Console.WriteLine("Failed to open device (error " + this.ftStatus + ")");
             }
         }
 
-        public void SetupDevice()
+        public void SetupDevice(
+            uint baudRate = 9600, 
+            byte dataBits = FTDI.FT_DATA_BITS.FT_BITS_8, 
+            byte stopBits = FTDI.FT_STOP_BITS.FT_STOP_BITS_1, 
+            byte parity = FTDI.FT_PARITY.FT_PARITY_NONE,
+            ushort flowControl = FTDI.FT_FLOW_CONTROL.FT_FLOW_RTS_CTS,
+            byte xon = 0x11,
+            byte xoff = 0x13,
+            uint readTimeout = 5000,
+            uint writeTimeout = 0)
         {
             // Set up device data parameters
             // Set Baud rate to 9600
-            ftStatus = myFtdiDevice.SetBaudRate(9600);
+            ftStatus = myFtdiDevice.SetBaudRate(baudRate);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to set Baud rate (error " + ftStatus.ToString() + ")");
+                Console.WriteLine("Failed to set Baud rate (error " + this.ftStatus + ")");
                 return;
             }
 
             // Set data characteristics - Data bits, Stop bits, Parity
-            ftStatus = myFtdiDevice.SetDataCharacteristics(FTDI.FT_DATA_BITS.FT_BITS_8, FTDI.FT_STOP_BITS.FT_STOP_BITS_1, FTDI.FT_PARITY.FT_PARITY_NONE);
+            ftStatus = myFtdiDevice.SetDataCharacteristics(dataBits, stopBits, parity);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to set data characteristics (error " + ftStatus.ToString() + ")");
+                Console.WriteLine("Failed to set data characteristics (error " + this.ftStatus + ")");
                 return;
             }
 
             // Set flow control - set RTS/CTS flow control
-            ftStatus = myFtdiDevice.SetFlowControl(FTDI.FT_FLOW_CONTROL.FT_FLOW_RTS_CTS, 0x11, 0x13);
+            ftStatus = myFtdiDevice.SetFlowControl(flowControl, xon, xoff);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to set flow control (error " + ftStatus.ToString() + ")");
+                Console.WriteLine("Failed to set flow control (error " + this.ftStatus + ")");
                 return;
             }
 
             // Set read timeout to 5 seconds, write timeout to infinite
-            ftStatus = myFtdiDevice.SetTimeouts(5000, 0);
+            ftStatus = myFtdiDevice.SetTimeouts(readTimeout, writeTimeout);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to set timeouts (error " + ftStatus.ToString() + ")");
-                return;
+                Console.WriteLine("Failed to set timeouts (error " + this.ftStatus + ")");
             }
         }
 
@@ -144,8 +148,7 @@ namespace FTDI_Test
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to write to device (error " + ftStatus.ToString() + ")");
-                return;
+                Console.WriteLine("Failed to write to device (error " + this.ftStatus + ")");
             }
         }
 
@@ -161,11 +164,11 @@ namespace FTDI_Test
                 if (ftStatus != FTDI.FT_STATUS.FT_OK)
                 {
                     // Wait for a key press
-                    Console.WriteLine("Failed to get number of bytes available to read (error " + ftStatus.ToString() + ")");
+                    Console.WriteLine("Failed to get number of bytes available to read (error " + this.ftStatus + ")");
                     return string.Empty;
                 }
-                Thread.Sleep(10);
-            } while (numBytesAvailable < 32); //32byte data packet?
+                Thread.Sleep(1);
+            } while (numBytesAvailable < 18); //32byte data packet?
 
             // Now that we have the amount of data we want available, read it
             string readData;
@@ -175,10 +178,10 @@ namespace FTDI_Test
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press
-                Console.WriteLine("Failed to read data (error " + ftStatus.ToString() + ")");
+                Console.WriteLine("Failed to read data (error " + this.ftStatus + ")");
                 return string.Empty;
             }
-            Console.WriteLine(readData);
+            Console.Write(readData);
             return readData;
         }
 
