@@ -174,7 +174,7 @@ namespace FTDI_Test
             string readData;
             UInt32 numBytesRead = 0;
             // Note that the Read method is overloaded, so can read string or byte array data
-            ftStatus = myFtdiDevice.Read(out readData, numBytesAvailable, ref numBytesRead);
+            ftStatus = myFtdiDevice.Read(out readData, 18, ref numBytesRead);
             if (ftStatus != FTDI.FT_STATUS.FT_OK)
             {
                 // Wait for a key press

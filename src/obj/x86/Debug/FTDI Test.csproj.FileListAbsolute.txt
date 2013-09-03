@@ -9,4 +9,3 @@ C:\code\FTDI Test\src\bin\Debug\FTD2XX_NET.dll
 C:\code\FTDI Test\src\bin\Debug\FTD2XX_NET.xml
 C:\code\FTDI Test\src\bin\Debug\ftd2xx.dll
 C:\code\FTDI Test\src\obj\x86\Debug\FTDI_Test.FTDI_Test.resources
-C:\code\FTDI Test\src\bin\Debug\ftdiSharp.dll
